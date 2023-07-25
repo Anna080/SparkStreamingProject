@@ -1,6 +1,7 @@
 *.db
 *.txt
 *.csv
+*.icloud
 
 kafka_2.13-3.5.0/
 

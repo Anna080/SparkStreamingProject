@@ -1,0 +1,75 @@
+*.db
+*.txt
+*.csv
+
+kafka_2.13-3.5.0/
+
+# Fichiers de projet IntelliJ IDEA
+.idea/
+
+# Fichiers d'édition de texte
+*.iml
+*.ipr
+*.iws
+
+# Fichiers de logs
+logs/
+*.log
+
+# Fichiers compilés et générés
+target/
+project/target/
+project/boot/
+
+# Fichiers de dépendances téléchargées
+lib_managed/
+ivy2/
+
+# Fichiers temporaires
+tmp/
+temp/
+
+# Fichiers de sauvegarde d'éditeurs
+*~
+
+# Fichiers de cache de SBT
+.cache/
+.history/
+
+# Fichiers de configuration de l'environnement de développement local
+.env
+
+# Fichiers de configuration spécifiques aux éditeurs
+.vscode/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+*.komodoproject
+*.komodotools
+
+# Fichiers de sortie de couverture de code
+.scoverage/
+
+# Fichiers de rapports et de journaux de test
+test-reports/
+test-output/
+/target/test-reports/
+
+# Fichiers spécifiques à Scala
+*.class
+*.jar
+*.sbt_aux/
+
+# Fichier de verrouillage SBT
+.sbtserver/
+
+# Dossiers spécifiques à l'utilisateur (à adapter selon votre configuration)
+/.cache/
+/.coursier/
+
+# Fichiers de sauvegarde système
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+

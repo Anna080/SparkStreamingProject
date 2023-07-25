@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Power Consumption Dashboard</title>
+    <!-- Plotly.js CDN for real-time updating -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Power Consumption Dashboard</h1>
+
+    <div id="real-time-chart" style="width: 800px; height: 400px;"></div>
+    <div id="prediction-text"></div>
+    <div id="anomaly-text"></div>
+
+    <script type="text/javascript">
+        // Function to update the real-time chart with new data
+        function updateRealTimeChart(data) {
+            var datetime = data['date'];
+            var global_active_power = data['global_active_power'];
+            var predicted_power = data['predicted_power'];
+            var is_anomaly = data['is_anomaly'];
+
+            // Update the x and y data arrays of both actual and predicted traces
+            traceActual.x.push(datetime);
+            traceActual.y.push(global_active_power);
+            tracePredicted.x.push(datetime);
+            tracePredicted.y.push(predicted_power);
+
+            // Limit the data arrays to the last 100 points
+            var maxDataPoints = 100;
+            if (traceActual.x.length > maxDataPoints) {
+                traceActual.x.splice(0, traceActual.x.length - maxDataPoints);
+                traceActual.y.splice(0, traceActual.y.length - maxDataPoints);
+                tracePredicted.x.splice(0, tracePredicted.x.length - maxDataPoints);
+                tracePredicted.y.splice(0, tracePredicted.y.length - maxDataPoints);
+            }
+
+            // Update the chart
+            Plotly.update('real-time-chart', [traceActual, tracePredicted]);
+
+            // Update the prediction text
+            document.getElementById('prediction-text').innerHTML = 'Actual Power: ' + global_active_power.toFixed(2) + ' | Predicted Power: ' + predicted_power.toFixed(2);
+
+            // Update the anomaly text
+            if (is_anomaly) {
+                document.getElementById('anomaly-text').innerHTML = 'Anomaly Detected: Yes';
+                document.getElementById('anomaly-text').style.color = 'red';
+            } else {
+                document.getElementById('anomaly-text').innerHTML = 'Anomaly Detected: No';
+                document.getElementById('anomaly-text').style.color = 'green';
+            }
+
+            // Update the x-axis range to slide the graph
+            var update = {
+                xaxis: {
+                    range: [datetime - 10*1000, datetime + 1000]  // Display last 10 seconds of data
+                }
+            };
+
+            Plotly.relayout('real-time-chart', update);
+        }
+
+        // Initialize the real-time chart
+        var layout = {
+            title: 'Real-Time Power Consumption',
+            xaxis: {
+                title: 'Datetime',
+                range: [0, 1],  // Dummy range, will be updated dynamically
+            },
+            yaxis: {
+                title: 'Power',
+            },
+            plot_bgcolor: 'white'
+        };
+
+        var traceActual = {
+            x: [],
+            y: [],
+            mode: 'lines',
+            name: 'Actual Power'
+        };
+
+        var tracePredicted = {
+            x: [],
+            y: [],
+            mode: 'lines',
+            name: 'Predicted Power',
+            line: {
+                dash: 'dash' // Dashed line for predicted power
+            }
+        };
+
+        var config = {
+            displayModeBar: false
+        };
+
+        Plotly.newPlot('real-time-chart', [traceActual, tracePredicted], layout, config);
+
+        // Function to fetch new data and update the chart every second
+        function fetchDataAndUpdateChart() {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    updateRealTimeChart(data);
+                });
+        }
+
+        // Update the chart every second
+        setInterval(fetchDataAndUpdateChart, 1000);
+
+        // Call the fetch function initially to populate the chart
+        fetchDataAndUpdateChart();
+    </script>
+</body>
+</html>

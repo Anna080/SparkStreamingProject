@@ -2,9 +2,10 @@ import collections
 from flask import Flask, render_template, jsonify
 import pandas as pd
 import sqlite3
+import time
+import pickle
 import numpy as np
 from collections import deque
-import pickle
 
 app = Flask(__name__)
 
@@ -23,6 +24,23 @@ buffer = deque(maxlen=n)
 m = 100
 errors = deque(maxlen=m)
 
+@app.route('/daily_total', methods=['GET'])
+def get_daily_total():
+    conn = sqlite3.connect('/home/nadim/data.db')
+    cursor = conn.cursor()
+
+    # Query to get the total power consumption for each day
+    cursor.execute("SELECT * FROM power_data ORDER BY Date DESC, Time DESC LIMIT 1")
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Convert the rows to a list of dictionaries
+    data = [{'date': row[0], 'total_power': row[2]} for row in rows]
+
+    return jsonify(data)
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -34,14 +52,14 @@ def get_data():
     cursor.execute("SELECT * FROM power_data ORDER BY Date DESC, Time DESC LIMIT 1")
     row = cursor.fetchone()
     conn.close()
-    
+
     if row is None:
         print("No data fetched from the database.")
         return jsonify({})
 
     # Convert query to an object of key-value pairs
     d = collections.OrderedDict()
-    d['date'] = pd.to_datetime(row[0] + ' ' + row[1], format='%d/%m/%Y %I:%M:%S %p').isoformat()
+    d['date'] = pd.to_datetime(row[0] + ' ' + row[1], format='%d/%m/%Y %H:%M:%S').isoformat()
     d['global_active_power'] = row[2]
 
     print(f"Fetched data: {d}")
@@ -54,9 +72,9 @@ def get_data():
         return jsonify(d)
 
     # If the buffer is full, make a prediction
-    x = np.array(list(buffer)).reshape(-1, 1)
+    x = np.array(list(buffer)).reshape(-1, n)
     x_scaled = scaler.transform(x)
-    x_scaled = np.reshape(x_scaled, (n, 1, 1))
+    x_scaled = np.reshape(x_scaled, (1, 1, n))  # Changed the shape to match what the model expects
 
     # Make a prediction
     prediction = model.predict(x_scaled)
@@ -79,6 +97,7 @@ def get_data():
         d['is_anomaly'] = bool(error > anomaly_threshold)
 
     return jsonify(d)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

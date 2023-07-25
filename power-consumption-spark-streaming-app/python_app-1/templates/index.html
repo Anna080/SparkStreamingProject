@@ -8,14 +8,19 @@
 <body>
     <h1>Power Consumption Dashboard</h1>
 
-    <div id="real-time-chart" style="width: 800px; height: 400px;"></div>
+    <div id="real-time-chart" style="width: 1000px; height: 400px;"></div>
     <div id="prediction-text"></div>
     <div id="anomaly-text"></div>
+    <div id="daily-chart" style="width: 1000px; height: 400px;"></div>
 
     <script type="text/javascript">
+        function convertDateFormat(dateString) {
+            const [day, month, year] = dateString.split('/');
+            return `${month}/${day}/${year}`;
+        }
         // Function to update the real-time chart with new data
         function updateRealTimeChart(data) {
-            var datetime = data['date'];
+            var datetime = new Date(data['date']);
             var global_active_power = data['global_active_power'];
             var predicted_power = data['predicted_power'];
             var is_anomaly = data['is_anomaly'];
@@ -53,7 +58,7 @@
             // Update the x-axis range to slide the graph
             var update = {
                 xaxis: {
-                    range: [datetime - 10*1000, datetime + 1000]  // Display last 10 seconds of data
+                    range: [Math.min(...traceActual.x), Math.max(...traceActual.x)]
                 }
             };
 
@@ -65,7 +70,7 @@
             title: 'Real-Time Power Consumption',
             xaxis: {
                 title: 'Datetime',
-                range: [0, 1],  // Dummy range, will be updated dynamically
+                range: [0, 6],  // Dummy range, will be updated dynamically
             },
             yaxis: {
                 title: 'Power',
@@ -93,23 +98,95 @@
         var config = {
             displayModeBar: false
         };
+        var layoutDaily = {
+            title: 'Daily Power Consumption',
+            xaxis: {
+                title: 'Day',
+            },
+            yaxis: {
+                title: 'Average Power',
+            },
+            plot_bgcolor: 'white'
+        };
+
+        var traceDailyAvg = {
+            x: [],
+            y: [],
+            mode: 'lines+markers',
+            name: 'Average Power'
+        };
+
+        var traceDailyBar = {
+            x: [],
+            y: [],
+            type: 'bar',
+            name: 'Daily Power',
+            marker: {
+                color: 'rgb(255, 100, 100)',  // Change the color to something visible
+            },
+        };
+        
+
+
+        Plotly.newPlot('daily-chart', [traceDailyBar, traceDailyAvg], layoutDaily, config);
 
         Plotly.newPlot('real-time-chart', [traceActual, tracePredicted], layout, config);
 
-        // Function to fetch new data and update the chart every second
+        // Variable to store the date and total consumption for the day
+        let currentDate = null;
+        let totalConsumption = 0;
+        // Function to calculate moving average
+        function movingAverage(arr, n) {
+            var result = [];
+            for (var i = 0; i < arr.length - n + 1; i++) {
+                var sum = 0;
+                for (var j = i; j < i + n; j++) {
+                    sum += arr[j];
+                }
+                result.push(sum / n);
+            }
+            return result;
+        }
+        // Fetch new data and update the charts
         function fetchDataAndUpdateChart() {
             fetch('/data')
                 .then(response => response.json())
                 .then(data => {
-                    updateRealTimeChart(data);
+                    updateRealTimeChart(data); // Update the real-time chart
+        
+                    // Fetch the daily consumption data
+                    fetch('/daily_total')
+                        .then(response => response.json())
+                        .then(dailyData => {
+                            if (currentDate === null || currentDate !== dailyData[0].date) {
+                                const convertedDate = convertDateFormat(dailyData[0].date);
+                                traceDailyBar.x.push(new Date(convertedDate));
+                                traceDailyBar.y.push(dailyData[0].total_power);
+                                currentDate = dailyData[0].date;
+                                totalConsumption = dailyData[0].total_power;
+                            } else {
+                                totalConsumption += dailyData[0].total_power;
+                                traceDailyBar.y[traceDailyBar.y.length - 1] = totalConsumption;
+                            }
+
+                            // Calculate moving average and update daily average trace
+                            const movingAvg = movingAverage(traceDailyBar.y, 2); // Change '7' to the desired moving average period
+                            traceDailyAvg.x = traceDailyBar.x.slice(6); // Change '6' to desired moving average period - 1
+                            traceDailyAvg.y = movingAvg;
+
+                            // Update the daily chart
+                            Plotly.update('daily-chart', [traceDailyBar, traceDailyAvg], layoutDaily);
+                        });
                 });
         }
 
-        // Update the chart every second
+
+
+        // Update the real-time chart every second
         setInterval(fetchDataAndUpdateChart, 1000);
 
-        // Call the fetch function initially to populate the chart
+        // Fetch data and update the charts when the page loads
         fetchDataAndUpdateChart();
+
     </script>
-</body>
-</html>
+</body

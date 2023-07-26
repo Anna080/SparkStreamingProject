@@ -4,14 +4,19 @@
     <title>Power Consumption Dashboard</title>
     <!-- Plotly.js CDN for real-time updating -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            background-color: rgb(225, 225, 225);
+        }
+    </style>
 </head>
 <body>
     <h1>Power Consumption Dashboard</h1>
 
-    <div id="real-time-chart" style="width: 1000px; height: 400px;"></div>
+    <div id="real-time-chart" style="width: 100%; height: 400px;"></div>
     <div id="prediction-text"></div>
     <div id="anomaly-text"></div>
-    <div id="daily-chart" style="width: 1000px; height: 400px;"></div>
+    <div id="daily-chart" style="width: 100%; height: 400px;"></div>
 
     <script type="text/javascript">
         function convertDateFormat(dateString) {
@@ -82,7 +87,10 @@
             x: [],
             y: [],
             mode: 'lines',
-            name: 'Actual Power'
+            name: 'Actual Power',
+            line: {
+                shape: 'spline'
+            }
         };
 
         var tracePredicted = {
@@ -91,7 +99,8 @@
             mode: 'lines',
             name: 'Predicted Power',
             line: {
-                dash: 'dash' // Dashed line for predicted power
+                shape: 'spline',
+                color: 'red'
             }
         };
 
@@ -153,7 +162,8 @@
                 .then(response => response.json())
                 .then(data => {
                     updateRealTimeChart(data); // Update the real-time chart
-        
+                    setTimeout(fetchDataAndUpdateChart, 1000);
+
                     // Fetch the daily consumption data
                     fetch('/daily_total')
                         .then(response => response.json())

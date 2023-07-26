@@ -23,7 +23,7 @@ def index():
     conn.close()
 
     # Convert 'Date' and 'Time' to datetime
-    data['Datetime'] = pd.to_datetime(data['Date'] + ' ' + data['Time'], format='%d/%m/%Y %I:%M:%S %p')
+    data['Datetime'] = pd.to_datetime(data['Date'] + ' ' + data['Time'], format='%d/%m/%Y %H:%M:%S')
     data = data.drop(['Date', 'Time'], axis=1)
 
     # Suppression des lignes avec des valeurs manquantes
@@ -44,7 +44,7 @@ def index():
     data_normalized = pd.concat([Datetime_data, X_data_normalized], axis=1)
 
     # Entraîner le modèle d'Isolation Forest
-    model = IsolationForest(contamination=0.05)  
+    model = IsolationForest(contamination=0.001)  
     model.fit(X_data_normalized)
 
     # Prédire les anomalies
@@ -77,7 +77,7 @@ def index():
         plot_bgcolor='white'
     )
 
-# Group original data by year and month, and calculate the mean of 'Global_active_power'
+    # Group original data by year and month, and calculate the mean of 'Global_active_power'
     original_data_monthly = data.groupby([data['Datetime'].dt.strftime('%Y-%m')])['Global_active_power'].mean().reset_index()
     original_data_monthly['Month'] = pd.to_datetime(original_data_monthly['Datetime']).dt.strftime('%m/%y')
 
@@ -146,7 +146,7 @@ def index():
 
 @app.route('/data', methods=['GET'])
 def get_data():
-    conn = sqlite3.connect('/Users/annadiaw/Desktop/ProjetSparkStreaming/data.db')
+    conn = sqlite3.connect('/home/nadim/data.db')
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM power_data")
     rows = cursor.fetchall()

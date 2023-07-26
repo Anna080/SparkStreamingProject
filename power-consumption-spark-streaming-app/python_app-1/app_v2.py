@@ -10,10 +10,10 @@ from collections import deque
 app = Flask(__name__)
 
 # Load the model and scaler from the files
-with open('models/model.pkl', 'rb') as f:
+with open('model.pkl', 'rb') as f:
     model = pickle.load(f)
 
-with open('models/scaler.pkl', 'rb') as f:
+with open('scaler.pkl', 'rb') as f:
     scaler = pickle.load(f)
 
 # Buffer to store the last 'n' data points
@@ -26,7 +26,7 @@ errors = deque(maxlen=m)
 
 @app.route('/daily_total', methods=['GET'])
 def get_daily_total():
-    conn = sqlite3.connect('/Users/annadiaw/Desktop/ProjetSparkStreaming/data.db')
+    conn = sqlite3.connect('/home/nadim/data.db')
     cursor = conn.cursor()
 
     # Query to get the total power consumption for each day
@@ -47,7 +47,7 @@ def index():
 
 @app.route('/data', methods=['GET'])
 def get_data():
-    conn = sqlite3.connect('/home/nadim/data.db')
+    conn = sqlite3.connect('/Users/annadiaw/Desktop/ProjetSparkStreaming/data.db')
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM power_data ORDER BY Date DESC, Time DESC LIMIT 1")
     row = cursor.fetchone()
@@ -97,7 +97,6 @@ def get_data():
         d['is_anomaly'] = bool(error > anomaly_threshold)
 
     return jsonify(d)
-
 
 
 if __name__ == '__main__':

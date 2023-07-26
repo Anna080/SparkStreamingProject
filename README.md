@@ -40,6 +40,7 @@ Ce projet est une application de streaming basée sur Kafka et Spark qui lit les
 - Bibliothèques Python : pandas, numpy, plotly, scikit-learn, seaborn
 
 ### Exécution du projet :
+Pour exécuter ce projet, il faut télécharger les fichiers **data.db** et **power_consumption_data** en accédant au au [lien suivant](https://drive.google.com/drive/folders/1ajVoVYxxZ9_fY3GojbA_y9z9jx42aS01?usp=sharing) et les placer respectivement à la racine du projet, et dans /power-consumption-spark-streaming-app/resources/.
 1. Démarrer le serveur Zookeeper et le serveur Kafka.
 2. Exécuter `DataGenerator.scala` pour générer et envoyer les données au sujet Kafka `first`.
 3. Exécuter `DataProcessor.scala` pour consommer et traiter les messages du sujet Kafka `first`, et pour sauvegarder les données dans une base de données SQLite.
